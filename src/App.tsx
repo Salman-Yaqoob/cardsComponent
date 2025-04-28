@@ -29,19 +29,16 @@ function App() {
       try {
         const res = await fetch("https://dummyjson.com/carts");
         const data = await res.json();
-        console.log(data);
-        const productsz = data
+        console.log(data.carts);
+
+        const productsz = data.carts
           .map((datas) => {
             return datas.products;
           })
           .flat();
-        setProducts(() => productsz);
 
-        const filterProducts = products.filter((products) => {
-          const str = products.title + products.thumbnail;
-          return str.includes(search);
-        });
-        setFilterData(filterProducts);
+        setProducts(productsz);
+        setFilterData(productsz);
       } catch (err) {
         console.log("when fetching data of cart it fail" + err);
       } finally {
@@ -59,7 +56,7 @@ function App() {
           `https://api.unsplash.com/photos/random?query=${search}&count=10&client_id=${ACCESS_KEY}`,
         );
         const data = await res.json();
-        console.log(data);
+
         setImgSrc(data);
         setIsLoading(!setIsLoading);
       } catch (err) {
@@ -82,6 +79,12 @@ function App() {
     if (!query) return;
 
     setSearch(query);
+    setFilterData(() => {
+      return products?.filter((productsz) => {
+        const str = String(productsz.title + productsz.thumbnail);
+        return str.includes(search);
+      });
+    });
 
     setQuery("");
   }
@@ -93,7 +96,7 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen w-full flex-col gap-5 bg-gray-200">
+    <div className="flex h-screen w-full flex-col gap-10 bg-gray-200">
       <Navbar
         query={query}
         onHandleSearch={handleClickSreach}
@@ -101,16 +104,26 @@ function App() {
         onKeyDownEnter={KeyDownEnter}
       />
 
+      <h1 className="text-center text-3xl font-semibold text-slate-950">
+        search item : <span className="font-bold">{search}</span>
+      </h1>
+
       <div className="flex flex-wrap items-center justify-center gap-4">
-        {filterData?.map((data, id) => (
-          <Cards
-            id={id}
-            key={data.id}
-            data={data}
-            isLoading={isLoading}
-            imgSrc={imgSrc}
-          />
-        ))}
+        {filterData?.length < 0 ? (
+          <p> no item found </p>
+        ) : (
+          filterData
+            ?.slice(0, 10)
+            .map((data, id) => (
+              <Cards
+                id={id}
+                key={id}
+                data={data}
+                isLoading={isLoading}
+                imgSrc={imgSrc}
+              />
+            ))
+        )}
       </div>
     </div>
   );
